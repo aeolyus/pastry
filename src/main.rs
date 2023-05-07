@@ -1,4 +1,5 @@
-mod lib;
+use pastry as lib;
+
 use anyhow::Result;
 
 fn main() -> Result<()> {

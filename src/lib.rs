@@ -1,37 +1,9 @@
+pub mod api;
+
 use anyhow::Result;
-use clap::{Parser, ValueEnum};
-use reqwest::blocking::{multipart, Client};
+use api::{EndpointApi, Pastebin, TheNullPointer};
+use clap::Parser;
 use std::io::{self, Read};
-
-trait Pastebin<'a> {
-    fn upload(self, input: String) -> Result<String>;
-}
-
-#[derive(Clone, Debug)]
-struct TheNullPointer<'a> {
-    // The URL of the endpoint
-    endpoint: &'a str,
-}
-
-impl<'a> Pastebin<'a> for TheNullPointer<'a> {
-    fn upload(self, input: String) -> Result<String> {
-        // Package the input string into a multipart form
-        let mut data = multipart::Form::new();
-        let part = multipart::Part::text(input).file_name("");
-        data = data.part("file", part);
-        // Send a POST request to the endpoint
-        let client = Client::new();
-        let response = client.post(self.endpoint).multipart(data).send()?;
-
-        response.text().map_err(anyhow::Error::from)
-    }
-}
-
-/// Represents the endpoint API type so we can interact properly
-#[derive(Clone, ValueEnum, Debug)]
-enum EndpointApi {
-    TheNullPointer,
-}
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -52,11 +24,11 @@ fn read_input() -> Result<String> {
 pub fn pastry() -> Result<String> {
     let result = read_input()?;
     let args = Args::parse();
-    let url = match args.api {
-        EndpointApi::TheNullPointer => TheNullPointer {
-            endpoint: "https://0x0.st",
-        }
-        .upload(result),
-    }?;
-    Ok(url)
+    let endpoint_api: Box<dyn Pastebin> = match args.api {
+        EndpointApi::TheNullPointer => Box::new(TheNullPointer {
+            endpoint: "https://0x0.st".to_string(),
+        }),
+    };
+    let url = endpoint_api.upload(result);
+    url
 }
