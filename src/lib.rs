@@ -1,7 +1,7 @@
 pub mod api;
 
 use anyhow::Result;
-use api::{EndpointApi, Pastebin, TheNullPointer};
+use api::{EndpointApi, GitLab, Pastebin, TheNullPointer};
 use clap::Parser;
 use std::io::{self, Read};
 
@@ -11,6 +11,12 @@ pub struct Args {
     /// The API we want to use for the endpoint
     #[arg(short, long)]
     api: EndpointApi,
+    #[arg(short, long)]
+    /// Personal access token for API
+    token: Option<String>,
+    #[arg(short, long)]
+    /// API URL
+    url: Option<String>,
 }
 
 /// Read the input from stdin
@@ -26,7 +32,13 @@ pub fn pastry() -> Result<String> {
     let args = Args::parse();
     let endpoint_api: Box<dyn Pastebin> = match args.api {
         EndpointApi::TheNullPointer => Box::new(TheNullPointer {
-            endpoint: "https://0x0.st".to_string(),
+            endpoint: args.url.unwrap_or("https://0x0.st".to_string()),
+        }),
+        EndpointApi::GitLab => Box::new(GitLab {
+            endpoint: args
+                .url
+                .unwrap_or("https://gitlab.com/api/v4/snippets".to_string()),
+            token: args.token.unwrap_or("".to_string()),
         }),
     };
     let url = endpoint_api.upload(result);
