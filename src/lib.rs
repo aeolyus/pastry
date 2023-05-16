@@ -28,8 +28,8 @@ fn read_input() -> Result<String> {
 
 /// Reads from stdin and uploads to a pastebin backend
 pub fn pastry() -> Result<String> {
-    let result = read_input()?;
     let args = Args::parse();
+    let result = read_input()?;
     let endpoint_api: Box<dyn Pastebin> = match args.api {
         EndpointApi::TheNullPointer => Box::new(TheNullPointer {
             endpoint: args.url.unwrap_or("https://0x0.st".to_string()),
