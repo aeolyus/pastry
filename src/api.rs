@@ -84,7 +84,7 @@ impl Pastebin for GitLab {
             .json(&request_body)
             .send()?;
         let resp_json = resp.json::<serde_json::Value>()?;
-        let url = resp_json.get("web_url");
-        Ok(url.unwrap().to_string())
+        let url = resp_json["web_url"].as_str().unwrap();
+        Ok(url.to_string())
     }
 }
