@@ -1,7 +1,7 @@
 pub mod api;
 
 use anyhow::Result;
-use api::{EndpointApi, GitLab, Pastebin, TheNullPointer};
+use api::{EndpointApi, GitLab, Pastebin, TheNullPointer, Visibility};
 use clap::Parser;
 use std::io::{self, Read};
 
@@ -11,12 +11,15 @@ pub struct Args {
     /// The API we want to use for the endpoint
     #[arg(short, long)]
     api: EndpointApi,
-    #[arg(short, long)]
     /// Personal access token for API
-    token: Option<String>,
     #[arg(short, long)]
+    token: Option<String>,
     /// API URL
+    #[arg(short, long)]
     url: Option<String>,
+    /// Visibility
+    #[arg(short, long)]
+    visibility: Option<Visibility>,
 }
 
 /// Read the input from stdin
@@ -39,6 +42,7 @@ pub fn pastry() -> Result<String> {
                 .url
                 .unwrap_or("https://gitlab.com/api/v4/snippets".to_string()),
             token: args.token.unwrap_or("".to_string()),
+            visibility: args.visibility.unwrap_or(Visibility::Public),
         }),
     };
     let url = endpoint_api.upload(result);

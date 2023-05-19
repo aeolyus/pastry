@@ -9,6 +9,7 @@ pub trait Pastebin {
 
 /// Represents the endpoint API type so we can interact properly
 #[derive(Clone, ValueEnum, Debug)]
+#[clap(rename_all = "lowercase")]
 pub enum EndpointApi {
     TheNullPointer,
     GitLab,
@@ -41,6 +42,7 @@ pub struct GitLab {
     // The URL of the endpoint
     pub endpoint: String,
     pub token: String,
+    pub visibility: Visibility,
 }
 
 #[derive(Debug, Serialize)]
@@ -49,11 +51,11 @@ struct SnippetFile {
     content: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, ValueEnum, Serialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
-enum Visibility {
-    _Private,
-    _Internal,
+pub enum Visibility {
+    Private,
+    Internal,
     Public,
 }
 
@@ -72,7 +74,7 @@ impl Pastebin for GitLab {
         };
         let request_body = NewSnippetRequest {
             title: "pastry".to_string(),
-            visibility: Visibility::Public,
+            visibility: self.visibility,
             files: vec![snippet_file],
         };
         let client = Client::new();
