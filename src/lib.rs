@@ -12,7 +12,7 @@ use std::io::{self, Read};
 pub struct Args {
     /// The API we want to use for the endpoint
     #[arg(short, long)]
-    api: EndpointApi,
+    api: Option<EndpointApi>,
     /// Personal access token for API
     #[arg(short, long)]
     token: Option<String>,
@@ -36,10 +36,10 @@ pub fn pastry() -> Result<String> {
     let args = Args::parse();
     let result = read_input()?;
     let endpoint_api: Box<dyn Pastebin> = match args.api {
-        EndpointApi::TheNullPointer => Box::new(TheNullPointer {
+        Some(EndpointApi::TheNullPointer) | None => Box::new(TheNullPointer {
             endpoint: args.url.unwrap_or("https://0x0.st".to_string()),
         }),
-        EndpointApi::GitLab => Box::new(GitLab {
+        Some(EndpointApi::GitLab) => Box::new(GitLab {
             endpoint: args
                 .url
                 .unwrap_or("https://gitlab.com/api/v4/snippets".to_string()),
