@@ -11,8 +11,8 @@ use std::io::{self, Read};
 #[command(author, version, about)]
 pub struct Args {
     /// The API we want to use for the endpoint
-    #[arg(short, long)]
-    api: Option<EndpointApi>,
+    #[arg(short, long, default_value="thenullpointer")]
+    api: EndpointApi,
     /// Personal access token for API
     #[arg(short, long)]
     token: Option<String>,
@@ -20,8 +20,8 @@ pub struct Args {
     #[arg(short, long)]
     url: Option<String>,
     /// Visibility
-    #[arg(short, long)]
-    visibility: Option<Visibility>,
+    #[arg(short, long, default_value="public")]
+    visibility: Visibility,
 }
 
 /// Read the input from stdin
@@ -36,15 +36,15 @@ pub fn pastry() -> Result<String> {
     let args = Args::parse();
     let result = read_input()?;
     let endpoint_api: Box<dyn Pastebin> = match args.api {
-        Some(EndpointApi::TheNullPointer) | None => Box::new(TheNullPointer {
+        EndpointApi::TheNullPointer => Box::new(TheNullPointer {
             endpoint: args.url.unwrap_or("https://0x0.st".to_string()),
         }),
-        Some(EndpointApi::GitLab) => Box::new(GitLab {
+        EndpointApi::GitLab => Box::new(GitLab {
             endpoint: args
                 .url
                 .unwrap_or("https://gitlab.com/api/v4/snippets".to_string()),
             token: args.token.unwrap_or("".to_string()),
-            visibility: args.visibility.unwrap_or(Visibility::Public),
+            visibility: args.visibility,
         }),
     };
     let url = endpoint_api.upload(result);
