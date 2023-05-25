@@ -1,7 +1,9 @@
 pub mod api;
 
 use anyhow::Result;
-use api::{EndpointApi, GitLab, Pastebin, TheNullPointer, Visibility};
+use api::{EndpointApi, Pastebin};
+use api::gitlab::{GitLab, Visibility};
+use api::thenullpointer::TheNullPointer;
 use clap::Parser;
 use std::io::{self, Read};
 
