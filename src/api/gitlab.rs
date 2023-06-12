@@ -1,7 +1,7 @@
 use crate::Pastebin;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::ValueEnum;
-use reqwest::blocking::Client;
+use reqwest::{blocking::Client, StatusCode};
 use serde::Serialize;
 
 #[derive(Clone, Debug)]
@@ -50,8 +50,21 @@ impl Pastebin for GitLab {
             .header("PRIVATE-TOKEN", self.token.to_string())
             .json(&request_body)
             .send()?;
+        if resp.status() != StatusCode::CREATED {
+            return Err(anyhow!(
+                "Request failed: {} {}",
+                resp.status(),
+                resp.text()?
+            ));
+        }
         let resp_json = resp.json::<serde_json::Value>()?;
-        let url = resp_json["web_url"].as_str().unwrap();
-        Ok(url.to_string())
+        let url = resp_json["web_url"].as_str();
+        match url {
+            Some(url) => Ok(url.to_string()),
+            None => Err(anyhow!(
+                "Could not locate `web_url` in the response: {}",
+                resp_json
+            )),
+        }
     }
 }
