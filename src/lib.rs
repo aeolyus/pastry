@@ -49,14 +49,13 @@ fn print_completion<G: Generator>(gen: G, cmd: &mut Command) {
     generate(gen, cmd, cmd.get_name().to_string(), &mut io::stdout())
 }
 
-/// Reads from stdin and uploads to a pastebin backend
-pub fn pastry() -> Result<String> {
+pub fn run() -> Result<()> {
     let args = Args::parse();
 
     match &args.command {
         Some(Commands::Completion { shell }) => {
             print_completion(*shell, &mut Args::command());
-            return Ok("".to_string());
+            return Ok(());
         }
         None => {}
     }
@@ -75,5 +74,11 @@ pub fn pastry() -> Result<String> {
         }),
     };
     let url = endpoint_api.upload(result);
-    url
+    match url {
+        Ok(url) => {
+            print!("{}", url);
+            Ok(())
+        }
+        Err(err) => Err(err),
+    }
 }
