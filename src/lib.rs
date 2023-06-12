@@ -1,17 +1,20 @@
 pub mod api;
 
 use anyhow::Result;
-use api::{EndpointApi, Pastebin};
 use api::gitlab::{GitLab, Visibility};
 use api::thenullpointer::TheNullPointer;
-use clap::Parser;
+use api::{EndpointApi, Pastebin};
+use clap::{Command, CommandFactory, Parser, Subcommand};
+use clap_complete::{generate, Generator, Shell};
 use std::io::{self, Read};
 
 #[derive(Parser)]
-#[command(author, version, about)]
+#[command(author, version, about, args_conflicts_with_subcommands = true)]
 pub struct Args {
+    #[command(subcommand)]
+    command: Option<Commands>,
     /// The API we want to use for the endpoint
-    #[arg(short, long, default_value="thenullpointer")]
+    #[arg(short, long, default_value = "thenullpointer")]
     api: EndpointApi,
     /// Personal access token for API
     #[arg(short, long)]
@@ -20,8 +23,18 @@ pub struct Args {
     #[arg(short, long)]
     url: Option<String>,
     /// Visibility
-    #[arg(short, long, default_value="public")]
+    #[arg(short, long, default_value = "public")]
     visibility: Visibility,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Provides shell completion
+    Completion {
+        /// Shell to generate the completion for
+        #[arg(short, long)]
+        shell: Shell,
+    },
 }
 
 /// Read the input from stdin
@@ -31,9 +44,23 @@ fn read_input() -> Result<String> {
     Ok(input)
 }
 
+#[cold]
+fn print_completion<G: Generator>(gen: G, cmd: &mut Command) {
+    generate(gen, cmd, cmd.get_name().to_string(), &mut io::stdout())
+}
+
 /// Reads from stdin and uploads to a pastebin backend
 pub fn pastry() -> Result<String> {
     let args = Args::parse();
+
+    match &args.command {
+        Some(Commands::Completion { shell }) => {
+            print_completion(*shell, &mut Args::command());
+            return Ok("".to_string());
+        }
+        None => {}
+    }
+
     let result = read_input()?;
     let endpoint_api: Box<dyn Pastebin> = match args.api {
         EndpointApi::TheNullPointer => Box::new(TheNullPointer {
