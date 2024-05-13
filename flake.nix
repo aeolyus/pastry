@@ -29,6 +29,7 @@
           nativeBuildInputs = with pkgs; [ pkg-config ];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
         };
+        formatter = pkgs.nixpkgs-fmt;
       }
     );
 }
